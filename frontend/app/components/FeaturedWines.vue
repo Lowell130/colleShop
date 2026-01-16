@@ -1,4 +1,7 @@
 <script setup>
+import { useCartStore } from '~/stores/cart';
+const cartStore = useCartStore();
+
 const wines = [
   {
     id: 1,
@@ -51,7 +54,7 @@ const wines = [
           <p class="text-xs text-gold-600 font-bold uppercase tracking-widest mb-4">{{ wine.type }}</p>
           <div class="text-xl font-serif text-stone-500 mb-8 italic">{{ wine.price }}</div>
           
-          <button class="w-full bg-stone-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group">
+          <button @click="cartStore.addToCart(wine)" class="w-full bg-stone-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group">
             <span>Aggiungi al Carrello</span>
           </button>
         </div>

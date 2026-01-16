@@ -2,11 +2,18 @@
 import { ref } from 'vue';
 
 const links = [
-  { name: 'I Nostri Vini', href: '#vini' },
-  { name: 'La Cantina', href: '#cantina' },
-  { name: 'Sostenibilità', href: '#sostenibilita' },
-  { name: 'Contatti', href: '#contatti' },
+  { name: 'Shop', href: '/shop' },
+  { name: 'I Nostri Vini', href: '/#vini' },
+  { name: 'La Cantina', href: '/#cantina' },
+  { name: 'Sostenibilità', href: '/#sostenibilita' },
+  { name: 'Contatti', href: '/#contatti' },
 ];
+
+import { useCartStore } from '~/stores/cart';
+import { storeToRefs } from 'pinia';
+
+const cartStore = useCartStore();
+const { totalItems } = storeToRefs(cartStore);
 
 const isMenuOpen = ref(false);
 </script>
@@ -26,18 +33,41 @@ const isMenuOpen = ref(false);
     </div>
 
     <!-- Links Right -->
-    <nav class="hidden md:flex space-x-8 text-sm uppercase tracking-widest">
-      <a v-for="link in links.slice(2)" :key="link.name" :href="link.href" class="font-medium hover:text-gold-600 transition-colors duration-300">
-        {{ link.name }}
-      </a>
+    <nav class="hidden md:flex items-center gap-8">
+      <div class="flex space-x-8 text-sm uppercase tracking-widest">
+        <a v-for="link in links.slice(2)" :key="link.name" :href="link.href" class="font-medium hover:text-gold-600 transition-colors duration-300">
+          {{ link.name }}
+        </a>
+      </div>
+      <!-- Cart Trigger Desktop -->
+      <button @click="cartStore.toggleCart()" class="relative group text-stone-800 hover:text-wine-900 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        <span v-if="totalItems > 0" class="absolute -top-2 -right-2 bg-wine-900 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white transform group-hover:scale-110 transition-transform">
+           {{ totalItems }}
+        </span>
+      </button>
     </nav>
 
-    <!-- Mobile Menu Button -->
-    <button @click="isMenuOpen = true" class="md:hidden text-stone-900 focus:outline-none relative z-50">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-      </svg>
-    </button>
+    <!-- Mobile Actions (Cart + Menu) -->
+    <div class="flex items-center gap-4 md:hidden relative z-50">
+        <button @click="cartStore.toggleCart()" class="relative text-stone-900">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span v-if="totalItems > 0" class="absolute -top-1 -right-1 bg-wine-900 text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center border border-white">
+               {{ totalItems }}
+            </span>
+        </button>
+
+        <!-- Mobile Menu Button -->
+        <button @click="isMenuOpen = true" class="text-stone-900 focus:outline-none">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+    </div>
 
     <!-- Mobile Menu Drawer & Backdrop -->
     <Teleport to="body">
