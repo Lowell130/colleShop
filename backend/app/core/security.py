@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.db.mongodb import mongodb
 from app.models.user import User
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 ALGORITHM = "HS256"
