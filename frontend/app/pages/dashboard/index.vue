@@ -17,7 +17,8 @@ const error = ref(null);
 
 onMounted(async () => {
     try {
-        const response = await fetch('http://localhost:8000/analytics/dashboard', {
+        const config = useRuntimeConfig();
+        const response = await fetch(`${config.public.apiBase}/analytics/dashboard`, {
              headers: {
                 'Authorization': `Bearer ${authStore.token}`
             }

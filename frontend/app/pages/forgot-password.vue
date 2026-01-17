@@ -16,7 +16,8 @@ const handleSubmit = async () => {
     error.value = '';
 
     try {
-        const response = await fetch('http://localhost:8000/auth/forgot-password', {
+        const config = useRuntimeConfig();
+        const response = await fetch(`${config.public.apiBase}/auth/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email.value })

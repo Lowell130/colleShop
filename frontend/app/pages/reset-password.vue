@@ -31,7 +31,8 @@ const handleSubmit = async () => {
 
     loading.value = true;
     try {
-        const response = await fetch('http://localhost:8000/auth/reset-password', {
+        const config = useRuntimeConfig();
+        const response = await fetch(`${config.public.apiBase}/auth/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ token, new_password: password.value })
