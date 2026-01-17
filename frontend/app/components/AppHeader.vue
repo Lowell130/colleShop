@@ -9,10 +9,12 @@ const links = [
   { name: 'Contatti', href: '/#contatti' },
 ];
 
+import { useAuthStore } from '~/stores/auth';
 import { useCartStore } from '~/stores/cart';
 import { storeToRefs } from 'pinia';
 
 const cartStore = useCartStore();
+const authStore = useAuthStore();
 const { totalItems } = storeToRefs(cartStore);
 
 const isMenuOpen = ref(false);
@@ -32,19 +34,36 @@ const isMenuOpen = ref(false);
           {{ link.name }}
         </a>
       </div>
-      <!-- Cart Trigger Desktop -->
-      <button @click="cartStore.toggleCart()" class="relative group text-stone-800 hover:text-wine-900 transition-colors pl-8 border-l border-stone-200">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-        </svg>
-        <span v-if="totalItems > 0" class="absolute -top-2 -right-2 bg-wine-900 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white transform group-hover:scale-110 transition-transform">
-           {{ totalItems }}
-        </span>
-      </button>
+      
+      <div class="flex items-center gap-6 pl-8 border-l border-stone-200">
+        <!-- User Account -->
+        <NuxtLink :to="authStore.token ? '/dashboard' : '/login'" class="text-stone-800 hover:text-wine-900 transition-colors" title="Area Utente">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </NuxtLink>
+
+        <!-- Cart Trigger Desktop -->
+        <button @click="cartStore.toggleCart()" class="relative group text-stone-800 hover:text-wine-900 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <span v-if="totalItems > 0" class="absolute -top-2 -right-2 bg-wine-900 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white transform group-hover:scale-110 transition-transform">
+             {{ totalItems }}
+          </span>
+        </button>
+      </div>
     </nav>
 
     <!-- Mobile Actions (Cart + Menu) -->
     <div class="flex items-center gap-4 md:hidden relative z-50">
+        <!-- User Account Mobile -->
+        <NuxtLink :to="authStore.token ? '/dashboard' : '/login'" class="text-stone-900 hover:text-wine-900 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </NuxtLink>
+
         <button @click="cartStore.toggleCart()" class="relative text-stone-900">
              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
