@@ -1,70 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '~/stores/cart';
+import { useProductsStore } from '~/stores/products';
+import { storeToRefs } from 'pinia';
 
 const cartStore = useCartStore();
+const productsStore = useProductsStore();
+const { products } = storeToRefs(productsStore);
 
-// Mock Data (Ideally moved to a composable or store later)
-const products = [
-  {
-    id: 1,
-    name: 'Verdant Reserve',
-    type: 'Bianco',
-    price: 25.00,
-    image: '/images/product_placeholder.png',
-    description: 'Un bianco strutturato e complesso, con note di fiori bianchi e agrumi.',
-    grape: 'Falanghina',
-    year: '2022'
-  },
-  {
-    id: 2,
-    name: 'Sun-Drenched Rosé',
-    type: 'Rosato',
-    price: 22.00,
-    image: '/images/product_placeholder.png',
-    description: 'Fresco e minerale, perfetto per aperitivi al tramonto.',
-    grape: 'Tintilia',
-    year: '2023'
-  },
-  {
-    id: 3,
-    name: 'Earth & Vine',
-    type: 'Rosso',
-    price: 28.00,
-    image: '/images/product_placeholder.png',
-    description: 'Un rosso intenso che racconta la forza della terra molisana.',
-    grape: 'Montepulciano',
-    year: '2020'
-  },
-  {
-    id: 4,
-    name: 'Midnight Reserve',
-    type: 'Rosso',
-    price: 45.00,
-    image: '/images/product_placeholder.png',
-    description: 'La nostra riserva più prestigiosa, invecchiata 24 mesi in barrique.',
-    grape: 'Tintilia',
-    year: '2019'
-  },
-    {
-    id: 5,
-    name: 'Golden Breeze',
-    type: 'Bianco',
-    price: 18.00,
-    image: '/images/product_placeholder.png',
-    description: 'Leggero e beverino, ideale per piatti di pesce.',
-    grape: 'Trebbiano',
-    year: '2023'
-  }
-];
+onMounted(() => {
+    productsStore.fetchProducts();
+});
 
 // Filtering Logic
 const activeFilter = ref('Tutti');
-const filters = ['Tutti', 'Rosso', 'Bianco', 'Rosato'];
+const filters = ['Tutti', 'Rosso', 'Bianco', 'Rosato', 'Spumante'];
 
 const filteredProducts = computed(() => {
-  if (activeFilter.value === 'Tutti') return products;
-  return products.filter(p => p.type === activeFilter.value);
+  if (activeFilter.value === 'Tutti') return products.value;
+  return products.value.filter(p => p.type === activeFilter.value);
 });
 
 // Format Price
@@ -104,18 +58,19 @@ const formatPrice = (price) => {
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
         <div 
           v-for="product in filteredProducts" 
-          :key="product.id"
+          :key="product._id"
           class="bg-white rounded-sm p-8 shadow-sm hover:shadow-2xl hover:shadow-gold-200/50 transition duration-500 group text-center border border-stone-100 flex flex-col"
         >
           <!-- Image -->
-          <div class="h-64 flex items-center justify-center mb-8 relative overflow-hidden rounded-sm bg-stone-50 group-hover:bg-white transition-colors duration-500 cursor-pointer" @click="$router.push(`/shop/${product.id}`)">
-             <img :src="product.image" :alt="product.name" class="h-full object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 ease-in-out">
+          <div class="h-64 flex items-center justify-center mb-8 relative overflow-hidden rounded-sm bg-stone-50 group-hover:bg-white transition-colors duration-500 cursor-pointer" @click="$router.push(`/shop/${product._id}`)">
+             <img v-if="product.image" :src="product.image" :alt="product.name" class="h-full object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 ease-in-out">
+             <div v-else class="text-stone-300">No Image</div>
           </div>
           
           <!-- Content -->
           <div class="flex-grow">
             <div class="text-xs text-gold-600 font-bold uppercase tracking-widest mb-1">{{ product.grape }} — {{ product.year }}</div>
-            <h3 class="text-2xl font-serif text-stone-900 mb-2 group-hover:text-wine-900 transition-colors cursor-pointer" @click="$router.push(`/shop/${product.id}`)">{{ product.name }}</h3>
+            <h3 class="text-2xl font-serif text-stone-900 mb-2 group-hover:text-wine-900 transition-colors cursor-pointer" @click="$router.push(`/shop/${product._id}`)">{{ product.name }}</h3>
             <p class="text-stone-500 font-light text-sm mb-4 line-clamp-2">{{ product.description }}</p>
             <div class="text-xl font-serif text-stone-900 mb-6 font-medium italic">{{ formatPrice(product.price) }}</div>
           </div>
@@ -125,7 +80,7 @@ const formatPrice = (price) => {
              <button @click="cartStore.addToCart(product)" class="w-full bg-stone-900 text-white py-3 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group/btn">
                 <span>Aggiungi al Carrello</span>
              </button>
-             <button @click="$router.push(`/shop/${product.id}`)" class="w-full bg-transparent text-stone-500 py-2 rounded-sm font-bold uppercase tracking-widest text-[10px] hover:text-wine-900 transition-colors">
+             <button @click="$router.push(`/shop/${product._id}`)" class="w-full bg-transparent text-stone-500 py-2 rounded-sm font-bold uppercase tracking-widest text-[10px] hover:text-wine-900 transition-colors">
                 Visualizza Dettagli
              </button>
           </div>

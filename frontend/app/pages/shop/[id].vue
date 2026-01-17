@@ -1,83 +1,28 @@
 <script setup>
 import { useRoute } from 'vue-router';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useCartStore } from '~/stores/cart';
+import { useProductsStore } from '~/stores/products';
+import { storeToRefs } from 'pinia';
 
 const cartStore = useCartStore();
+const productsStore = useProductsStore();
+const { currentProduct: product } = storeToRefs(productsStore);
 
 const route = useRoute();
-const productId = computed(() => parseInt(route.params.id));
+const productId = route.params.id;
 
-// Mock Data (Same as index.vue - ideal to unify later)
-const products = [
-  {
-    id: 1,
-    name: 'Verdant Reserve',
-    type: 'Bianco',
-    price: 25.00,
-    image: '/images/product_placeholder.png',
-    description: 'Un bianco strutturato e complesso, con note di fiori bianchi, pesca gialla e un tocco di mandorla tostata. Perfetto per accompagnare piatti di pesce strutturati o formaggi a media stagionatura.',
-    grape: 'Falanghina 100%',
-    year: '2022',
-    alcohol: '13.5%',
-    temp: '10-12°C',
-    pairing: 'Pesce al forno, Risotti, Formaggi freschi'
-  },
-  {
-    id: 2,
-    name: 'Sun-Drenched Rosé',
-    type: 'Rosato',
-    price: 22.00,
-    image: '/images/product_placeholder.png',
-    description: 'Fresco e minerale, questo rosato cattura l\'essenza delle serate estive. Sentori di fragolina di bosco e rosa canina. Ideale come aperitivo.',
-    grape: 'Tintilia 100%',
-    year: '2023',
-    alcohol: '12.5%',
-    temp: '8-10°C',
-    pairing: 'Aperitivi, Crostacei, Salumi leggeri'
-  },
-  {
-    id: 3,
-    name: 'Earth & Vine',
-    type: 'Rosso',
-    price: 28.00,
-    image: '/images/product_placeholder.png',
-    description: 'Un rosso intenso che racconta la forza della terra molisana. Note di amarena, cuoio e spezie dolci. Tannino morbido e persistente.',
-    grape: 'Montepulciano 100%',
-    year: '2020',
-    alcohol: '14.5%',
-    temp: '16-18°C',
-    pairing: 'Carni rosse, Cacciagione, Formaggi stagionati'
-  },
-   {
-    id: 4,
-    name: 'Midnight Reserve',
-    type: 'Rosso',
-    price: 45.00,
-    image: '/images/product_placeholder.png',
-    description: 'La nostra riserva più prestigiosa, invecchiata 24 mesi in barrique. Un vino da meditazione, profondo ed elegante.',
-    grape: 'Tintilia 100%',
-    year: '2019',
-    alcohol: '15%',
-    temp: '18°C',
-    pairing: 'Arrosti importanti, Cioccolato fondente'
-  },
-    {
-    id: 5,
-    name: 'Golden Breeze',
-    type: 'Bianco',
-    price: 18.00,
-    image: '/images/product_placeholder.png',
-    description: 'Leggero e beverino, ideale per piatti di pesce. Sentori di mela verde e fiori di campo.',
-    grape: 'Trebbiano 100%',
-    year: '2023',
-    alcohol: '12%',
-    temp: '8-10°C',
-    pairing: 'Antipasti di mare, Fritture'
+onMounted(() => {
+    productsStore.fetchProduct(productId);
+});
+
+// Watch for route changes (if user navigates between products)
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) productsStore.fetchProduct(newId);
   }
-];
-
-const product = computed(() => products.find(p => p.id === productId.value));
+);
 
 const quantity = ref(1);
 
@@ -85,7 +30,8 @@ const increment = () => quantity.value++;
 const decrement = () => { if (quantity.value > 1) quantity.value--; };
 
 const formatPrice = (price) => {
-  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(price);
+    if (!price) return '€0,00';
+    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(price);
 };
 </script>
 
@@ -102,7 +48,8 @@ const formatPrice = (price) => {
         <!-- Image Section -->
         <div class="bg-stone-50 rounded-sm p-12 flex items-center justify-center relative overflow-hidden h-[600px]">
            <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'3\'/%3E%3C/g%3E%3C/svg%3E');"></div>
-           <img :src="product.image" :alt="product.name" class="h-full object-contain mix-blend-multiply drop-shadow-2xl">
+           <img v-if="product.image" :src="product.image" :alt="product.name" class="h-full object-contain mix-blend-multiply drop-shadow-2xl">
+           <div v-else class="text-stone-300 text-xl font-serif italic">Nessuna Immagine Disponibile</div>
         </div>
 
         <!-- Info Section -->

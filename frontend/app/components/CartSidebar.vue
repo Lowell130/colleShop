@@ -1,12 +1,19 @@
 <script setup>
 import { useCartStore } from '~/stores/cart';
 import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 
 const cartStore = useCartStore();
+const router = useRouter();
 const { items, isCartOpen, totalPrice } = storeToRefs(cartStore);
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(price);
+};
+
+const goToCheckout = () => {
+  cartStore.toggleCart(); // Close sidebar
+  router.push('/checkout');
 };
 </script>
 
@@ -103,7 +110,7 @@ const formatPrice = (price) => {
               <span class="text-2xl font-serif text-wine-900">{{ formatPrice(totalPrice) }}</span>
            </div>
            
-           <button class="w-full bg-wine-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-sm hover:bg-wine-800 transition-all duration-300 ease-out shadow-xl hover:shadow-wine-900/40 hover:-translate-y-1 relative overflow-hidden group">
+           <button @click="goToCheckout" class="w-full bg-wine-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-sm hover:bg-wine-800 transition-all duration-300 ease-out shadow-xl hover:shadow-wine-900/40 hover:-translate-y-1 relative overflow-hidden group">
                 <span class="relative z-10">Procedi al Checkout</span>
                 <div class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
            </button>

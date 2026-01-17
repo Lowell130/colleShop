@@ -8,6 +8,7 @@
       <slot />
     </div>
     <AppFooter />
+    <BackToTop />
     <CartSidebar />
   </div>
 </template>

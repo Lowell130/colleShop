@@ -1,4 +1,17 @@
 <script setup>
+import { useSettingsStore } from '~/stores/settings';
+import { onMounted, computed } from 'vue';
+
+const settingsStore = useSettingsStore();
+
+onMounted(() => {
+    // Lazy load if not present
+    if (!settingsStore.settings) {
+        settingsStore.fetchSettings();
+    }
+});
+
+const s = computed(() => settingsStore.settings || {});
 </script>
 
 <template>
@@ -41,7 +54,9 @@
           <li><a href="#" class="hover:text-white transition-colors">Il Territorio</a></li>
           <li><a href="#" class="hover:text-white transition-colors">Sostenibilità</a></li>
           <li><a href="#" class="hover:text-white transition-colors">Visite & Degustazioni</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Contatti</a></li>
+          <li><a href="/#contatti" class="hover:text-white transition-colors">Contatti</a></li>
+          <li class="pt-4 border-t border-stone-800"><NuxtLink to="/login" class="hover:text-white transition-colors text-stone-500">Accesso Area Riservata</NuxtLink></li>
+          <li><NuxtLink to="/dashboard" class="hover:text-white transition-colors text-stone-500">Dashboard</NuxtLink></li>
         </ul>
       </div>
 
@@ -49,23 +64,23 @@
       <div>
         <h4 class="font-bold uppercase tracking-widest text-xs text-gold-600 mb-6">Il Colle Tinto</h4>
         <p class="text-sm mb-6 leading-relaxed">
-          Contrada Colle Tinto, 12<br>
-          86010 Castropignano (CB)<br>
+          {{ s.address || 'Contrada Colle Tinto, 12, 86010 Castropignano (CB)' }}<br>
           Molise, Italia
         </p>
         <div class="flex gap-4">
-           <!-- Social Icons Placeholder -->
-           <div class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center hover:bg-gold-500 hover:text-stone-900 transition-colors cursor-pointer text-xs font-bold text-stone-500">IG</div>
-           <div class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center hover:bg-gold-500 hover:text-stone-900 transition-colors cursor-pointer text-xs font-bold text-stone-500">FB</div>
+           <!-- Social Icons -->
+           <a v-if="s.instagram_url" :href="s.instagram_url" target="_blank" class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center hover:bg-gold-500 hover:text-stone-900 transition-colors cursor-pointer text-xs font-bold text-stone-500">IG</a>
+           <a v-if="s.facebook_url" :href="s.facebook_url" target="_blank" class="w-8 h-8 rounded-full bg-stone-800 flex items-center justify-center hover:bg-gold-500 hover:text-stone-900 transition-colors cursor-pointer text-xs font-bold text-stone-500">FB</a>
         </div>
       </div>
     </div>
 
-    <div class="border-t border-stone-800 mt-16 pt-8 text-center text-xs text-stone-500 flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto">
+    <div class="border-t border-stone-800 mt-16 pt-8 text-center text-xs text-stone-500 flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto relative">
       <p>&copy; 2024 Il Colle Tinto. Tutti i diritti riservati.</p>
+      
       <div class="flex gap-6 mt-4 md:mt-0">
-        <a href="#" class="hover:text-stone-300">Privacy Policy</a>
-        <a href="#" class="hover:text-stone-300">Termini & Condizioni</a>
+        <NuxtLink to="/privacy" class="hover:text-stone-300">Privacy Policy</NuxtLink>
+        <NuxtLink to="/terms" class="hover:text-stone-300">Termini & Condizioni</NuxtLink>
       </div>
     </div>
   </footer>

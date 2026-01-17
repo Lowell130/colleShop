@@ -1,30 +1,18 @@
 <script setup>
 import { useCartStore } from '~/stores/cart';
-const cartStore = useCartStore();
+import { useProductsStore } from '~/stores/products';
+import { storeToRefs } from 'pinia';
+import { onMounted, computed } from 'vue';
 
-const wines = [
-  {
-    id: 1,
-    name: 'Verdant Reserve',
-    type: 'Bianco',
-    price: '€25.00',
-    image: '/images/product_placeholder.png' // Clean placeholder
-  },
-  {
-    id: 2,
-    name: 'Sun-Drenched Rosé',
-    type: 'Rosato',
-    price: '€22.00',
-    image: '/images/product_placeholder.png'
-  },
-  {
-    id: 3,
-    name: 'Earth & Vine',
-    type: 'Rosso',
-    price: '€28.00',
-    image: '/images/product_placeholder.png'
-  }
-];
+const cartStore = useCartStore();
+const productsStore = useProductsStore();
+const { products } = storeToRefs(productsStore);
+
+const displayedProducts = computed(() => products.value.slice(0, 3));
+
+onMounted(() => {
+    productsStore.fetchProducts();
+});
 </script>
 
 <template>
@@ -44,15 +32,16 @@ const wines = [
       </div>
 
       <div class="grid md:grid-cols-3 gap-10">
-        <div v-for="wine in wines" :key="wine.id" class="bg-white rounded-sm p-8 shadow-sm hover:shadow-2xl hover:shadow-gold-200/50 transition duration-500 group text-center border border-stone-100 relative">
+        <div v-for="wine in displayedProducts" :key="wine._id" class="bg-white rounded-sm p-8 shadow-sm hover:shadow-2xl hover:shadow-gold-200/50 transition duration-500 group text-center border border-stone-100 relative">
           <div class="h-64 flex items-center justify-center mb-8 relative overflow-hidden rounded-sm bg-stone-50 group-hover:bg-white transition-colors duration-500">
             <!-- Simulated Bottle Image -->
-            <img :src="wine.image" class="h-full object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 ease-in-out" :alt="wine.name">
+             <img v-if="wine.image" :src="wine.image" class="h-full object-contain mix-blend-multiply group-hover:scale-110 transition duration-700 ease-in-out" :alt="wine.name">
+             <div v-else class="h-full flex items-center justify-center text-stone-300">No Image</div>
           </div>
           
           <h3 class="text-2xl font-serif text-stone-900 mb-1 group-hover:text-wine-900 transition-colors">{{ wine.name }}</h3>
           <p class="text-xs text-gold-600 font-bold uppercase tracking-widest mb-4">{{ wine.type }}</p>
-          <div class="text-xl font-serif text-stone-500 mb-8 italic">{{ wine.price }}</div>
+          <div class="text-xl font-serif text-stone-500 mb-8 italic">€ {{ wine.price ? wine.price.toFixed(2) : '0.00' }}</div>
           
           <button @click="cartStore.addToCart(wine)" class="w-full bg-stone-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group">
             <span>Aggiungi al Carrello</span>

@@ -20,27 +20,20 @@ const isMenuOpen = ref(false);
 
 <template>
   <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-4 text-stone-800 transition-all duration-300 backdrop-blur-sm bg-white/60 border-b border-stone-100/50">
-    <!-- Links Left -->
-    <nav class="hidden md:flex space-x-8 text-sm uppercase tracking-widest">
-      <a v-for="link in links.slice(0, 2)" :key="link.name" :href="link.href" class="font-medium hover:text-gold-600 transition-colors duration-300">
-        {{ link.name }}
-      </a>
-    </nav>
-
-    <!-- Logo Center -->
-    <div class="flex flex-col items-center relative z-50">
-      <img src="/images/logo.png" alt="Il Colle Tinto" class="h-16 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-500" />
+    <!-- Logo Left -->
+    <div class="flex flex-col items-center relative z-50 mr-auto">
+     <a href="/"> <img src="/images/logo.png" alt="Il Colle Tinto" class="h-16 w-auto object-contain drop-shadow-sm transition-transform hover:scale-105 duration-500" /></a>
     </div>
 
-    <!-- Links Right -->
-    <nav class="hidden md:flex items-center gap-8">
+    <!-- Navigation Right -->
+    <nav class="hidden md:flex items-center gap-8 ml-auto">
       <div class="flex space-x-8 text-sm uppercase tracking-widest">
-        <a v-for="link in links.slice(2)" :key="link.name" :href="link.href" class="font-medium hover:text-gold-600 transition-colors duration-300">
+        <a v-for="link in links" :key="link.name" :href="link.href" class="font-medium hover:text-gold-600 transition-colors duration-300">
           {{ link.name }}
         </a>
       </div>
       <!-- Cart Trigger Desktop -->
-      <button @click="cartStore.toggleCart()" class="relative group text-stone-800 hover:text-wine-900 transition-colors">
+      <button @click="cartStore.toggleCart()" class="relative group text-stone-800 hover:text-wine-900 transition-colors pl-8 border-l border-stone-200">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
         </svg>

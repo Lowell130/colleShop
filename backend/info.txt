@@ -1,0 +1,5 @@
+avvio venv
+.\venv\Scripts\activate
+
+avvio backend
+uvicorn app.main:app --reload   
