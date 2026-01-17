@@ -13,7 +13,8 @@ export const useOrdersStore = defineStore('orders', {
             this.error = null;
             const authStore = useAuthStore();
             try {
-                const response = await fetch('http://localhost:8000/orders/mine', {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/orders/mine`, {
                     headers: {
                         'Authorization': `Bearer ${authStore.token}`
                     }
@@ -32,7 +33,8 @@ export const useOrdersStore = defineStore('orders', {
             this.error = null;
             const authStore = useAuthStore();
             try {
-                const response = await fetch('http://localhost:8000/orders/', {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/orders/`, {
                     headers: {
                         'Authorization': `Bearer ${authStore.token}`
                     }
@@ -48,7 +50,8 @@ export const useOrdersStore = defineStore('orders', {
         async fetchOrderById(id) {
             const authStore = useAuthStore();
             try {
-                const response = await fetch(`http://localhost:8000/orders/${id}`, {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/orders/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${authStore.token}`
                     }
@@ -60,16 +63,17 @@ export const useOrdersStore = defineStore('orders', {
                 throw e;
             }
         },
-        async updateOrderStatus(id, status) {
+        async updateOrderStatus(id, status, tracking_number = null, courier_name = null) {
             const authStore = useAuthStore();
             try {
-                const response = await fetch(`http://localhost:8000/orders/${id}/status`, {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/orders/${id}/status`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authStore.token}`
                     },
-                    body: JSON.stringify({ status })
+                    body: JSON.stringify({ status, tracking_number, courier_name })
                 });
                 if (!response.ok) throw new Error('Failed to update status');
                 return await response.json();

@@ -14,6 +14,7 @@ const commonLinks = [
 
 const adminLinks = [
   { name: 'Gestione Prodotti', href: '/dashboard/products', icon: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5' },
+  { name: 'SEO & Metadati', href: '/dashboard/seo', icon: 'M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m-15.686 0A8.959 8.959 0 013 12c0-.778.099-1.533.284-2.253m0 0A11.953 11.953 0 0112 10.5c2.998 0 5.74-1.1 7.843-2.918' },
   { name: 'Impostazioni', href: '/dashboard/settings', icon: 'M10.34 1.503a.375.375 0 01.61 0l.432.923c.3.643.694 1.243 1.174 1.772l.923-.274a.375.375 0 01.444.156l1.24 2.148a.375.375 0 01-.115.485l-1.01.762a7.513 7.513 0 010 3.056l1.01.762a.375.375 0 01.115.485l-1.24 2.148a.375.375 0 01-.444.156l-.924-.274a7.515 7.515 0 01-1.174 1.773l-.432.922a.375.375 0 01-.61 0l-.432-.922a7.515 7.515 0 01-1.174-1.773l-.923.274a.375.375 0 01-.444-.156l-1.24-2.148a.375.375 0 01.115-.485l1.01-.762a7.513 7.513 0 010-3.056l-1.01-.762a.375.375 0 01-.115-.485l1.24-2.148a.375.375 0 01.444-.156l.923.274c.48-.529.874-1.13 1.174-1.772l.432-.923zM10.5 13.5a3 3 0 100-6 3 3 0 000 6z' },
 ];
 
@@ -63,9 +64,9 @@ const links = computed(() => {
                 </svg>
             </button>
             <div class="ml-auto flex items-center gap-4">
-                <span class="text-stone-600 text-sm font-medium">{{ user?.fullName || 'Utente' }}</span>
+                <span class="text-stone-600 text-sm font-medium">{{ user?.full_name || 'Utente' }}</span>
                 <div class="h-8 w-8 bg-wine-100 rounded-full flex items-center justify-center text-wine-900 font-bold text-xs ring-2 ring-white shadow-sm">
-                    {{ user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'U' }}
+                    {{ user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U' }}
                 </div>
             </div>
         </header>

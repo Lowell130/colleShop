@@ -3,3 +3,6 @@ avvio venv
 
 avvio backend
 uvicorn app.main:app --reload   
+
+avvio backend su Cloud
+uvicorn app.main:app --host 0.0.0.0 --port $PORT

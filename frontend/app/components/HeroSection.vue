@@ -23,13 +23,13 @@
       
       <!-- CTA Buttons -->
       <div class="flex flex-col md:flex-row justify-center gap-6 animate-fade-in-up delay-300">
-        <button class="bg-wine-900 text-white px-10 py-4 rounded-sm hover:bg-wine-800 transition-all duration-300 ease-out shadow-xl hover:shadow-wine-900/40 hover:-translate-y-1 uppercase tracking-widest text-sm font-bold relative overflow-hidden group">
+        <a href="#vini" class="bg-wine-900 text-white px-10 py-4 rounded-sm hover:bg-wine-800 transition-all duration-300 ease-out shadow-xl hover:shadow-wine-900/40 hover:-translate-y-1 uppercase tracking-widest text-sm font-bold relative overflow-hidden group inline-block">
           <span class="relative z-10">Scopri i Vini</span>
           <div class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
-        </button>
-        <button class="bg-white/80 backdrop-blur-sm text-stone-900 border border-stone-200 px-10 py-4 rounded-sm hover:bg-stone-900 hover:text-white hover:border-stone-900 transition-all duration-300 ease-out shadow-sm hover:shadow-lg hover:-translate-y-1 uppercase tracking-widest text-sm font-bold">
+        </a>
+        <a href="#cantina" class="bg-white/80 backdrop-blur-sm text-stone-900 border border-stone-200 px-10 py-4 rounded-sm hover:bg-stone-900 hover:text-white hover:border-stone-900 transition-all duration-300 ease-out shadow-sm hover:shadow-lg hover:-translate-y-1 uppercase tracking-widest text-sm font-bold inline-block">
           La Nostra Storia
-        </button>
+        </a>
       </div>
     </div>
   </section>

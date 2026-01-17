@@ -23,6 +23,8 @@ class OrderBase(BaseModel):
     shipping_address: Address
     billing_address: Address
     stripe_payment_intent_id: Optional[str] = None
+    tracking_number: Optional[str] = None
+    courier_name: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class OrderCreate(BaseModel):

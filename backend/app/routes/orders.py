@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from app.core.email_utils import send_email_background
 from typing import List, Any
 from app.db.mongodb import mongodb
 from app.models.order import Order, OrderCreate
@@ -13,7 +14,7 @@ router = APIRouter()
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 @router.post("/checkout", status_code=status.HTTP_201_CREATED)
-async def create_checkout_session(order_in: OrderCreate, current_user: User = Depends(get_current_user)) -> Any:
+async def create_checkout_session(order_in: OrderCreate, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)) -> Any:
     # 1. Calculate total from backend (security best practice) - skipping for speed, trusting frontend for now but validating consistency later.
     amount = int(order_in.total_amount * 100) # Cents for Stripe
 
@@ -48,12 +49,54 @@ async def create_checkout_session(order_in: OrderCreate, current_user: User = De
         if not order_data.get("customer_tax_code"):
              order_data["customer_tax_code"] = current_user.get("tax_code")
         
+        # Ensure tax code is present
+        if not order_data.get("customer_tax_code"):
+            raise HTTPException(status_code=400, detail="Codice Fiscale obbligatorio.")
+
         order_data["status"] = "pending"
         order_data["stripe_payment_intent_id"] = payment_intent_id
         order_data["created_at"] = datetime.utcnow()
 
         result = await mongodb.db.orders.insert_one(order_data)
         
+        # --- Auto-update User Profile with latest checkout data ---
+        user_update_data = {
+            "shipping_address": order_in.shipping_address.dict(),
+            "billing_address": order_in.billing_address.dict(),
+            "tax_code": order_data["customer_tax_code"]
+        }
+        # Only update if fields are present in the order (which they are, validated by pydantic/frontend)
+        await mongodb.db.users.update_one(
+            {"_id": current_user["_id"]},
+            {"$set": user_update_data}
+        )
+        # ----------------------------------------------------------
+        
+        # Send Order Confirmation Email via Background Task
+        email_html = f"""
+        <h1>Grazie per il tuo ordine, {order_data["customer_name"]}!</h1>
+        <p>Il tuo ordine #{str(result.inserted_id)} è stato ricevuto ed è {order_data["status"]}.</p>
+        <p><strong>Totale:</strong> €{order_in.total_amount:.2f}</p>
+        <h3>Riepilogo:</h3>
+        <ul>
+        """
+        for item in order_in.items:
+             email_html += f"<li>{item.quantity}x {item.name} - €{item.price:.2f}</li>"
+        
+        email_html += f"""
+        </ul>
+        <br>
+        <p>A presto,<br>Il Team di ColleShop</p>
+        """
+
+        if order_data.get("customer_email"):
+             background_tasks.add_task(
+                send_email_background, 
+                order_data["customer_email"], 
+                f"Conferma Ordine #{str(result.inserted_id)}", 
+                email_html
+            )
+
         return {
             "orderId": str(result.inserted_id),
             "clientSecret": client_secret
@@ -92,22 +135,62 @@ async def get_order_by_id(id: str, current_user: User = Depends(get_current_user
     return order
 
 from pydantic import BaseModel
+from typing import Optional
 class OrderStatusUpdate(BaseModel):
     status: str
+    tracking_number: Optional[str] = None
+    courier_name: Optional[str] = None
 
 @router.put("/{id}/status", response_model=Order)
-async def update_order_status(id: str, status_update: OrderStatusUpdate, current_user: User = Depends(get_current_user)) -> Any:
+async def update_order_status(id: str, status_update: OrderStatusUpdate, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)) -> Any:
     # Admin only
     if current_user.get("role") != "admin":
          raise HTTPException(status_code=403, detail="Not authorized")
     
+    update_data = {"status": status_update.status}
+    if status_update.tracking_number:
+        update_data["tracking_number"] = status_update.tracking_number
+    if status_update.courier_name:
+        update_data["courier_name"] = status_update.courier_name
+
     result = await mongodb.db.orders.update_one(
         {"_id": ObjectId(id)},
-        {"$set": {"status": status_update.status}}
+        {"$set": update_data}
     )
     
     if result.matched_count == 0:
          raise HTTPException(status_code=404, detail="Order not found")
 
     updated_order = await mongodb.db.orders.find_one({"_id": ObjectId(id)})
+
+    # Send status update email
+    email_html = f"""
+    <h1>Aggiornamento Ordine #{str(updated_order["_id"])}</h1>
+    <p>Gentile {updated_order.get("customer_name")},</p>
+    <p>Lo stato del tuo ordine è stato aggiornato a: <strong>{status_update.status}</strong></p>
+    """
+
+    if status_update.status == "shipped" and updated_order.get("tracking_number"):
+        email_html += f"""
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <p style="margin: 0; font-weight: bold;">Dettagli Spedizione:</p>
+            <p style="margin: 5px 0 0 0;">Corriere: {updated_order.get('courier_name', 'N/D')}</p>
+            <p style="margin: 5px 0 0 0;">Tracking Number: {updated_order.get('tracking_number')}</p>
+        </div>
+        """
+
+    email_html += """
+    <br>
+    <p>Puoi seguire i dettagli nella tua area riservata.</p>
+    <p>A presto,<br>Il Team di ColleShop</p>
+    """
+    
+    if updated_order.get("customer_email"):
+         background_tasks.add_task(
+            send_email_background, 
+            updated_order["customer_email"], 
+            f"Aggiornamento Ordine #{str(updated_order['_id'])}", 
+            email_html
+        )
+
     return updated_order

@@ -1,6 +1,7 @@
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, BeforeValidator
 from typing import Optional, Annotated
+from datetime import datetime
 from bson import ObjectId
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
@@ -8,6 +9,7 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 class Address(BaseModel):
     street: Optional[str] = None
     city: Optional[str] = None
+    province: Optional[str] = None
     zip_code: Optional[str] = None
     country: Optional[str] = None
     phone: Optional[str] = None
@@ -21,6 +23,8 @@ class UserBase(BaseModel):
     tax_code: Optional[str] = None
     shipping_address: Optional[Address] = None
     billing_address: Optional[Address] = None
+    reset_token: Optional[str] = None
+    reset_token_expires: Optional[datetime] = None
 
 class UserCreate(UserBase):
     password: str

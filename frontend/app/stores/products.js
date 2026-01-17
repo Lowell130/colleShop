@@ -16,7 +16,8 @@ export const useProductsStore = defineStore('products', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await fetch('http://localhost:8000/products/');
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/products/`);
                 if (!response.ok) throw new Error('Failed to fetch products');
                 this.products = await response.json();
             } catch (err) {
@@ -31,7 +32,8 @@ export const useProductsStore = defineStore('products', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await fetch(`http://localhost:8000/products/${id}`);
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/products/${id}`);
                 if (!response.ok) throw new Error('Failed to fetch product');
                 this.currentProduct = await response.json();
                 return this.currentProduct;
@@ -47,7 +49,8 @@ export const useProductsStore = defineStore('products', {
         async createProduct(productData) {
             this.loading = true;
             try {
-                const response = await fetch('http://localhost:8000/products/', {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/products/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(productData)
@@ -68,7 +71,8 @@ export const useProductsStore = defineStore('products', {
         async updateProduct(id, productData) {
             this.loading = true;
             try {
-                const response = await fetch(`http://localhost:8000/products/${id}`, {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/products/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(productData)
@@ -91,7 +95,8 @@ export const useProductsStore = defineStore('products', {
         async deleteProduct(id) {
             this.loading = true;
             try {
-                const response = await fetch(`http://localhost:8000/products/${id}`, {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/products/${id}`, {
                     method: 'DELETE'
                 });
                 if (!response.ok) throw new Error('Failed to delete product');

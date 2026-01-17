@@ -105,7 +105,8 @@ export const useCartStore = defineStore('cart', {
                     customer_tax_code: addressData.tax_code
                 };
 
-                const response = await fetch('http://localhost:8000/orders/checkout', {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/orders/checkout`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

@@ -14,6 +14,10 @@ class SettingsUpdate(BaseModel):
     instagram_url: str = "https://instagram.com"
     privacy_text: str = ""
     terms_text: str = ""
+    seo_title: str = "Il Colle Tinto"
+    seo_description: str = "Vini d'eccellenza dal Molise."
+    seo_keywords: str = "vino, molise, tintilia"
+    seo_image_url: str = ""
 
 class SiteSettings(SettingsUpdate):
     id: Optional[str] = None

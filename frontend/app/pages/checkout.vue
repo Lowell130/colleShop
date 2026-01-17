@@ -24,6 +24,7 @@ const form = reactive({
     shipping_address: {
         street: '',
         city: '',
+        province: '',
         zip_code: '',
         country: '',
         phone: ''
@@ -31,6 +32,7 @@ const form = reactive({
     billing_address: {
         street: '',
         city: '',
+        province: '',
         zip_code: '',
         country: '',
         phone: ''
@@ -127,28 +129,28 @@ const formatPrice = (price) => {
                                 <input v-model="form.shipping_address.city" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
                             </div>
                             <div>
-                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">CAP</label>
-                                <input v-model="form.shipping_address.zip_code" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Provincia</label>
+                                <input v-model="form.shipping_address.province" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none" placeholder="RM">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Paese</label>
-                                <input v-model="form.shipping_address.country" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">CAP</label>
+                                <input v-model="form.shipping_address.zip_code" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
                             </div>
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Paese</label>
                                 <input v-model="form.shipping_address.country" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
                             </div>
-                            <div>
-                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Telefono</label>
-                                <input v-model="form.shipping_address.phone" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
-                            </div>
+                        </div>
+                        <div>
+                             <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Telefono</label>
+                             <input v-model="form.shipping_address.phone" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
                         </div>
                          <!-- Tax Code -->
                         <div>
                              <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Codice Fiscale *</label>
-                             <input v-model="form.tax_code" type="text" placeholder="CF per fatturazione" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none uppercase">
+                             <input v-model="form.tax_code" type="text" placeholder="CF per fatturazione" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none uppercase" required>
                         </div>
                     </div>
                 </div>
@@ -178,19 +180,23 @@ const formatPrice = (price) => {
                                 <input v-model="form.billing_address.city" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
                             </div>
                             <div>
-                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">CAP</label>
-                                <input v-model="form.billing_address.zip_code" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Provincia</label>
+                                <input v-model="form.billing_address.province" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none" placeholder="RM">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
+                             <div>
+                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">CAP</label>
+                                <input v-model="form.billing_address.zip_code" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                            </div>
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Paese</label>
                                 <input v-model="form.billing_address.country" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
                             </div>
-                            <div>
-                                <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Telefono</label>
-                                <input v-model="form.billing_address.phone" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
-                            </div>
+                        </div>
+                         <div>
+                            <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Telefono</label>
+                            <input v-model="form.billing_address.phone" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
                         </div>
                     </div>
                     <div v-else class="text-stone-500 text-sm italic py-4">

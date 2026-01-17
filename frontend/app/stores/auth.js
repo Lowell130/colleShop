@@ -38,8 +38,9 @@ export const useAuthStore = defineStore('auth', {
                 formData.append('username', email);
                 formData.append('password', password);
 
-                // Use runtime config for base URL in production, hardcode for dev rapid fix
-                const response = await fetch('http://localhost:8000/auth/login', {
+                const config = useRuntimeConfig();
+                // Use runtime config for base URL
+                const response = await fetch(`${config.public.apiBase}/auth/login`, {
                     method: 'POST',
                     body: formData
                 });
@@ -59,6 +60,30 @@ export const useAuthStore = defineStore('auth', {
                 return false;
             }
         },
+        async register(userData) {
+            try {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: userData.email,
+                        password: userData.password,
+                        full_name: userData.fullName // backend expects snake_case
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Registration failed');
+                }
+
+                return true;
+            } catch (e) {
+                console.error("Registration error", e);
+                throw e; // Let component handle error message
+            }
+        },
         logout() {
             this.token = null;
             this.user = null;
@@ -73,7 +98,8 @@ export const useAuthStore = defineStore('auth', {
         },
         async updateProfile(profileData) {
             try {
-                const response = await fetch('http://localhost:8000/auth/me', {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/auth/me`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

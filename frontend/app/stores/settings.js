@@ -8,7 +8,8 @@ export const useSettingsStore = defineStore('settings', {
     actions: {
         async fetchSettings() {
             try {
-                const response = await fetch('http://localhost:8000/settings/');
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/settings/`);
                 if (!response.ok) throw new Error('Failed to fetch settings');
                 this.settings = await response.json();
             } catch (error) {
@@ -17,7 +18,8 @@ export const useSettingsStore = defineStore('settings', {
         },
         async updateSettings(settingsData, token) {
             try {
-                const response = await fetch('http://localhost:8000/settings/', {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/settings/`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',

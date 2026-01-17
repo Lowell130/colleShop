@@ -41,20 +41,51 @@ const formatPrice = (price) => {
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(price);
 };
 
+const showTrackingModal = ref(false);
+const trackingForm = ref({ courier: '', number: '' });
+const pendingStatus = ref(null);
+
 const updateStatus = async (event) => {
     const newStatus = event.target.value;
     if (!newStatus) return;
+
+    // Check if status is shipped to trigger modal
+    if (newStatus === 'shipped') {
+        pendingStatus.value = newStatus;
+        showTrackingModal.value = true;
+        // Don't update yet
+        return;
+    }
     
+    // Direct update for other statuses
+    await performUpdate(newStatus);
+};
+
+const confirmTracking = async () => {
+    showTrackingModal.value = false;
+    await performUpdate('shipped', trackingForm.value.number, trackingForm.value.courier);
+    // Reset form
+    trackingForm.value = { courier: '', number: '' };
+};
+
+const cancelTracking = () => {
+    showTrackingModal.value = false;
+    pendingStatus.value = null;
+    // Force UI refresh or reset select? Ideally select binds to order.status so it should revert automatically if we didn't change it.
+    // However, the event changed the UI select value. We might need to force update key or similar, but since we bind :value="order.status", Vue should revert it on next tick if order.status didn't change.
+};
+
+const performUpdate = async (status, tracking = null, courier = null) => {
     updating.value = true;
     try {
-        const updatedOrder = await ordersStore.updateOrderStatus(order.value._id, newStatus);
+        const updatedOrder = await ordersStore.updateOrderStatus(order.value._id, status, tracking, courier);
         order.value = updatedOrder;
     } catch (e) {
         alert("Errore durante l'aggiornamento dello stato");
     } finally {
         updating.value = false;
     }
-};
+}
 
 const translateStatus = (status) => {
     switch (status) {
@@ -154,7 +185,7 @@ const translateStatus = (status) => {
                 <div v-if="order.shipping_address" class="text-stone-600 space-y-1">
                     <p class="font-bold text-stone-900">{{ order.customer_name }}</p>
                     <p>{{ order.shipping_address.street }}</p>
-                    <p>{{ order.shipping_address.zip_code }} {{ order.shipping_address.city }} ({{ order.shipping_address.country }})</p>
+                    <p>{{ order.shipping_address.zip_code }} {{ order.shipping_address.city }} {{ order.shipping_address.province ? '(' + order.shipping_address.province + ')' : '' }} - {{ order.shipping_address.country }}</p>
                     <p class="text-sm mt-2 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                         {{ order.shipping_address.phone }}
@@ -168,7 +199,7 @@ const translateStatus = (status) => {
                 <h3 class="text-lg font-serif text-stone-900 mb-4 border-b border-stone-100 pb-2">Dati Fatturazione</h3>
                 <div v-if="order.billing_address" class="text-stone-600 space-y-1">
                     <p>{{ order.billing_address.street }}</p>
-                    <p>{{ order.billing_address.zip_code }} {{ order.billing_address.city }} ({{ order.billing_address.country }})</p>
+                    <p>{{ order.billing_address.zip_code }} {{ order.billing_address.city }} {{ order.billing_address.province ? '(' + order.billing_address.province + ')' : '' }} - {{ order.billing_address.country }}</p>
                     <p class="text-sm mt-2 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                         {{ order.billing_address.phone }}
@@ -176,7 +207,52 @@ const translateStatus = (status) => {
                 </div>
                 <div v-else class="text-stone-400 italic">Stessi della spedizione</div>
             </div>
+            
+             <!-- Tracking Info Display -->
+            <div v-if="order.tracking_number" class="md:col-span-2 bg-stone-50 p-6 rounded-sm border border-stone-200">
+                <h3 class="text-lg font-serif text-stone-900 mb-4 border-b border-stone-200 pb-2 flex items-center gap-2">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-wine-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+                    Spedizione
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="block text-xs font-bold uppercase tracking-widest text-stone-500">Corriere</span>
+                        <span class="text-lg font-bold text-stone-800">{{ order.courier_name || 'N/D' }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-xs font-bold uppercase tracking-widest text-stone-500">Tracking Number</span>
+                        <span class="text-lg font-mono text-stone-800 bg-white px-2 py-1 rounded border border-stone-200 inline-block">{{ order.tracking_number }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Tracking Modal -->
+    <Teleport to="body">
+        <div v-if="showTrackingModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+            <div class="bg-white rounded-sm shadow-2xl p-8 max-w-md w-full animate-fade-in-up">
+                <h3 class="text-2xl font-serif text-wine-900 mb-4">Inserisci Tracking</h3>
+                <p class="text-stone-600 mb-6 text-sm">Hai impostato l'ordine come <strong>Spedito</strong>. Inserisci i dettagli per il cliente.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1">Corriere</label>
+                        <input v-model="trackingForm.courier" type="text" class="w-full border border-stone-300 p-2 rounded-sm focus:border-wine-900 outline-none" placeholder="Es. Bartolini, DHL...">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-1">Tracking Number</label>
+                        <input v-model="trackingForm.number" type="text" class="w-full border border-stone-300 p-2 rounded-sm focus:border-wine-900 outline-none" placeholder="Codice tracciamento">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-8">
+                    <button @click="cancelTracking" class="px-4 py-2 text-stone-500 hover:text-stone-800 font-bold uppercase tracking-widest text-xs">Annulla</button>
+                    <button @click="confirmTracking" class="bg-wine-900 text-white px-6 py-2 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-800 transition-colors">Conferma & Invia</button>
+                </div>
+            </div>
+        </div>
+    </Teleport>
+
   </div>
 </template>

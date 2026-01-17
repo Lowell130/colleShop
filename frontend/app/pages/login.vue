@@ -34,9 +34,16 @@ const submit = async () => {
             errorMsg.value = 'Login fallito. Controlla le credenziali.';
         }
     } else {
-        // TODO: Register logic is not yet implemented in store
-        alert("La registrazione non è ancora connessa alle API nel frontend, ma le API esistono.");
-        console.log("Registering...", form.value);
+        try {
+            await authStore.register(form.value);
+            // Registration successful
+            isLogin.value = true;
+            // Optional: reset password field or show success message
+            form.value.password = ''; 
+            alert("Registrazione completata! Effettua il login.");
+        } catch (e) {
+            errorMsg.value = e.message;
+        }
     }
 };
 </script>
