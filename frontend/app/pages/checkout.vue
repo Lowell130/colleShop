@@ -218,6 +218,12 @@ const formatPrice = (price) => {
                             </div>
                             <span class="font-medium text-stone-900">{{ formatPrice(item.price * item.quantity) }}</span>
                         </div>
+                         <!-- Shipping -->
+                         <div class="flex justify-between items-center text-sm pt-4 border-t border-stone-100">
+                            <span class="text-stone-600">Spedizione</span>
+                            <span v-if="cartStore.shipping === 0" class="font-bold text-green-600 uppercase text-xs tracking-widest">Gratis</span>
+                            <span v-else class="font-medium text-stone-900">{{ formatPrice(cartStore.shipping) }}</span>
+                        </div>
                     </div>
                     <div class="border-t border-stone-100 pt-6 flex justify-between items-center text-lg font-serif font-bold text-wine-900">
                         <span>Totale</span>

@@ -5,10 +5,23 @@ export const useCartStore = defineStore('cart', {
     state: () => ({
         items: [],
         isCartOpen: false,
+        shippingCost: 0,
+        freeShippingThreshold: 100,
     }),
     getters: {
         totalItems: (state) => state.items.reduce((total, item) => total + item.quantity, 0),
-        totalPrice: (state) => state.items.reduce((total, item) => total + (item.price * item.quantity), 0),
+        itemsSubtotal: (state) => state.items.reduce((total, item) => total + (item.price * item.quantity), 0),
+        shipping: (state) => {
+            if (state.items.length === 0) return 0;
+            const subtotal = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+            return subtotal >= state.freeShippingThreshold ? 0 : state.shippingCost;
+        },
+        totalPrice: (state) => {
+            const subtotal = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+            if (state.items.length === 0) return 0;
+            const shipping = subtotal >= state.freeShippingThreshold ? 0 : state.shippingCost;
+            return subtotal + shipping;
+        },
     },
     actions: {
         initializeCart() {
@@ -21,6 +34,22 @@ export const useCartStore = defineStore('cart', {
                         console.error('Failed to parse cart from localStorage', e);
                     }
                 }
+
+                // Fetch shipping settings
+                this.fetchShippingSettings();
+            }
+        },
+        async fetchShippingSettings() {
+            try {
+                const config = useRuntimeConfig();
+                const response = await fetch(`${config.public.apiBase}/settings/`);
+                if (response.ok) {
+                    const settings = await response.json();
+                    if (settings.shipping_cost !== undefined) this.shippingCost = settings.shipping_cost;
+                    if (settings.free_shipping_threshold !== undefined) this.freeShippingThreshold = settings.free_shipping_threshold;
+                }
+            } catch (e) {
+                console.error("Failed to fetch shipping settings", e);
             }
         },
         addToCart(product, quantity = 1) {

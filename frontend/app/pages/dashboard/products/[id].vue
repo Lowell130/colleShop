@@ -25,6 +25,7 @@ const form = ref({
     alcohol: '',
     temp: '',
     pairing: '',
+    stock: 0,
     image: '/images/product_placeholder.png' // Default placeholder
 });
 
@@ -108,9 +109,16 @@ const save = async () => {
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
+                             <label class="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Stock (Giacenza)</label>
+                             <input v-model="form.stock" type="number" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-sm focus:outline-none focus:border-wine-900 transition-colors" required />
+                        </div>
+                         <div>
                              <label class="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Vitigno</label>
                              <input v-model="form.grape" type="text" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-sm focus:outline-none focus:border-wine-900 transition-colors" />
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
                              <label class="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Annata</label>
                              <input v-model="form.year" type="number" class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-sm focus:outline-none focus:border-wine-900 transition-colors" />

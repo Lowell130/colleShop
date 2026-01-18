@@ -34,7 +34,8 @@ export const useAuthStore = defineStore('auth', {
         },
         async login(email, password) {
             try {
-                const formData = new FormData();
+                // Use URLSearchParams for application/x-www-form-urlencoded
+                const formData = new URLSearchParams();
                 formData.append('username', email);
                 formData.append('password', password);
 
@@ -42,6 +43,9 @@ export const useAuthStore = defineStore('auth', {
                 // Use runtime config for base URL
                 const response = await fetch(`${config.public.apiBase}/auth/login`, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
                     body: formData
                 });
 

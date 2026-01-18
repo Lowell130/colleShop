@@ -1,0 +1,6 @@
+Login Error: create_access_token() got an unexpected keyword argument 'data'
+Traceback (most recent call last):
+  File "C:\Users\stefa\Desktop\colleShop\backend\app\routes\auth.py", line 100, in login_for_access_token
+    access_token = create_access_token(
+                   ^^^^^^^^^^^^^^^^^^^^
+TypeError: create_access_token() got an unexpected keyword argument 'data'

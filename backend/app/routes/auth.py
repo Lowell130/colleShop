@@ -67,27 +67,59 @@ async def register(user_in: UserCreate, background_tasks: BackgroundTasks) -> An
 
     return created_user
 
-@router.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
-    user = await mongodb.db.users.find_one({"email": form_data.username})
-    if not user or not verify_password(form_data.password, user["hashed_password"]):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-    
-
-    access_token = create_access_token(subject=str(user["_id"]))
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer",
-        "user": {
-            "full_name": user.get("full_name"),
-            "email": user.get("email"),
-            "role": user.get("role", "user")
-        }
-    }
-
 from pydantic import BaseModel
 import secrets
 from datetime import datetime, timedelta
+from app.core.config import settings
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: dict # Or a more specific UserPublic model
+
+async def authenticate_user(email: str, password: str):
+    user = await mongodb.db.users.find_one({"email": email})
+    if not user or not verify_password(password, user["hashed_password"]):
+        return None
+    return user
+
+@router.post("/login", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
+    try:
+        print(f"DEBUG: Login attempt for {form_data.username}")
+        user = await authenticate_user(form_data.username, form_data.password)
+        if not user:
+             print("DEBUG: Authenticate user returned None")
+             raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect username or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            subject=str(user["_id"]), expires_delta=access_token_expires
+        )
+        print("DEBUG: Login successful")
+        
+        # Return User data along with token
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": str(user["_id"]),
+                "email": user["email"],
+                "full_name": user["full_name"],
+                "role": user.get("role", "customer"),
+                "shipping_address": user.get("shipping_address"),
+                "billing_address": user.get("billing_address"),
+                "tax_code": user.get("tax_code")
+            }
+        }
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise e
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr

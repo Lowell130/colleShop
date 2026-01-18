@@ -89,19 +89,32 @@ const formatPrice = (price) => {
            <!-- Add to Cart -->
            <div class="flex flex-col sm:flex-row gap-6">
               <!-- Quantity -->
-              <div class="flex items-center border border-stone-300 rounded-sm w-max">
+              <div class="flex items-center border border-stone-300 rounded-sm w-max" :class="{'opacity-50 pointer-events-none': product.stock <= 0}">
                  <button @click="decrement" class="px-4 py-3 text-stone-500 hover:text-stone-900 transition-colors">-</button>
                  <span class="w-12 text-center font-bold text-stone-900">{{ quantity }}</span>
                  <button @click="increment" class="px-4 py-3 text-stone-500 hover:text-stone-900 transition-colors">+</button>
               </div>
 
-              <button @click="cartStore.addToCart(product, quantity)" class="flex-grow bg-wine-900 text-white px-10 py-4 rounded-sm font-bold uppercase tracking-widest text-sm hover:bg-wine-800 transition-all duration-300 ease-out shadow-xl hover:shadow-wine-900/30 hover:-translate-y-1 relative overflow-hidden group">
-                <span class="relative z-10 flex items-center justify-center gap-3">
+              <button 
+                @click="cartStore.addToCart(product, quantity)" 
+                :disabled="product.stock <= 0"
+                class="flex-grow bg-wine-900 text-white px-10 py-4 rounded-sm font-bold uppercase tracking-widest text-sm hover:bg-wine-800 transition-all duration-300 ease-out shadow-xl hover:shadow-wine-900/30 hover:-translate-y-1 relative overflow-hidden group disabled:bg-stone-300 disabled:text-stone-500 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed"
+              >
+                <span v-if="product.stock > 0" class="relative z-10 flex items-center justify-center gap-3">
                    Aggiungi al Carrello 
                    <span class="opacity-70 font-normal">| {{ formatPrice(product.price * quantity) }}</span>
                 </span>
-                <div class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
+                <span v-else class="relative z-10 flex items-center justify-center">
+                    Esaurito
+                </span>
+                <div v-if="product.stock > 0" class="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
               </button>
+           </div>
+           
+           <!-- Stock Info -->
+           <div class="mt-4 text-xs font-bold uppercase tracking-widest text-right">
+                <span v-if="product.stock > 0" class="text-green-600">Disponibilità: {{ product.stock }} pezzi</span>
+                <span v-else class="text-red-600">Prodotto Esaurito</span>
            </div>
         </div>
       </div>

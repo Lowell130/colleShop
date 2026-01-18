@@ -48,13 +48,14 @@ const handleDuplicate = async (product) => {
                 <tr>
                     <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-stone-500">Nome</th>
                     <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-stone-500">Tipo</th>
+                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-stone-500">Stock</th>
                     <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-stone-500">Prezzo</th>
                     <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-stone-500 text-right">Azioni</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-stone-100">
                 <tr v-if="products.length === 0 && !loading">
-                     <td colspan="4" class="px-6 py-8 text-center text-stone-400">Nessun prodotto trovato.</td>
+                     <td colspan="5" class="px-6 py-8 text-center text-stone-400">Nessun prodotto trovato.</td>
                 </tr>
 
                 <tr v-for="product in products" :key="product._id" class="hover:bg-stone-50/50 transition-colors">
@@ -66,6 +67,11 @@ const handleDuplicate = async (product) => {
                         </div>
                     </td>
                     <td class="px-6 py-4 text-stone-600">{{ product.type }}</td>
+                    <td class="px-6 py-4">
+                        <span :class="{'text-red-600 font-bold': product.stock <= 0, 'text-green-600': product.stock > 0}">
+                            {{ product.stock || 0 }}
+                        </span>
+                    </td>
                     <td class="px-6 py-4 font-serif text-lg text-stone-800">€ {{ product.price.toFixed(2) }}</td>
                     <td class="px-6 py-4 text-right flex justify-end gap-3">
                         <button @click="handleDuplicate(product)" class="text-stone-400 hover:text-gold-600 transition-colors" title="Duplica">

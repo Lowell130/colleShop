@@ -15,6 +15,43 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 @router.post("/checkout", status_code=status.HTTP_201_CREATED)
 async def create_checkout_session(order_in: OrderCreate, background_tasks: BackgroundTasks, current_user: User = Depends(get_current_user)) -> Any:
+    # --- Check Stock & Calculate Shipping ---
+    site_settings = await mongodb.db.settings.find_one({})
+    shipping_cost = site_settings.get("shipping_cost", 10.0) if site_settings else 10.0
+    free_threshold = site_settings.get("free_shipping_threshold", 100.0) if site_settings else 100.0
+    
+    # Calculate items total
+    items_total = 0.0
+    for item in order_in.items:
+        product = await mongodb.db.products.find_one({"_id": ObjectId(item.product_id)})
+        if not product:
+            raise HTTPException(status_code=400, detail=f"Prodotto non trovato: {item.name}")
+        
+        # Check Stock
+        current_stock = product.get("stock", 0)
+        if current_stock < item.quantity:
+             raise HTTPException(status_code=400, detail=f"Quantità non disponibile per {item.name}. Disponibili: {current_stock}")
+        
+        items_total += item.price * item.quantity
+
+    # Determine shipping
+    final_shipping = 0.0
+    if items_total < free_threshold:
+        final_shipping = shipping_cost
+    
+    # Verify Total (Frontend vs Backend)
+    calculated_total = items_total + final_shipping
+    # Allow small tolerance
+    if abs(calculated_total - order_in.total_amount) > 0.1:
+        raise HTTPException(status_code=400, detail=f"Totale ordine non valido. Backend: {calculated_total}, Frontend: {order_in.total_amount}")
+    
+    # --- Decrement Stock ---
+    for item in order_in.items:
+         await mongodb.db.products.update_one(
+            {"_id": ObjectId(item.product_id)},
+            {"$inc": {"stock": -item.quantity}}
+        )
+
     # 1. Calculate total from backend (security best practice) - skipping for speed, trusting frontend for now but validating consistency later.
     amount = int(order_in.total_amount * 100) # Cents for Stripe
 
@@ -147,6 +184,18 @@ async def update_order_status(id: str, status_update: OrderStatusUpdate, backgro
     if current_user.get("role") != "admin":
          raise HTTPException(status_code=403, detail="Not authorized")
     
+    order = await mongodb.db.orders.find_one({"_id": ObjectId(id)})
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # If cancelling, restore stock
+    if status_update.status == "cancelled" and order.get("status") != "cancelled":
+        for item in order.get("items", []):
+             await mongodb.db.products.update_one(
+                {"_id": ObjectId(item["product_id"])},
+                {"$inc": {"stock": item["quantity"]}}
+            )
+            
     update_data = {"status": status_update.status}
     if status_update.tracking_number:
         update_data["tracking_number"] = status_update.tracking_number

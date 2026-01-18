@@ -2,22 +2,24 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class SettingsUpdate(BaseModel):
-    address: str = "Contrada Colle Tinto, 12, 86010 Castropignano (CB)"
-    email: EmailStr = "info@ilcolletinto.it"
-    phone: str = "+39 0874 123456"
-    hours_weekdays: str = "09:00 - 18:00"
-    hours_saturday: str = "10:00 - 13:00"
-    hours_sunday: str = "Su Prenotazione"
-    google_maps_url: str = ""
-    booking_email: EmailStr = "info@ilcolletinto.it"
-    facebook_url: str = "https://facebook.com"
-    instagram_url: str = "https://instagram.com"
-    privacy_text: str = ""
-    terms_text: str = ""
-    seo_title: str = "Il Colle Tinto"
-    seo_description: str = "Vini d'eccellenza dal Molise."
-    seo_keywords: str = "vino, molise, tintilia"
-    seo_image_url: str = ""
+    address: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    hours_weekdays: Optional[str] = None
+    hours_saturday: Optional[str] = None
+    hours_sunday: Optional[str] = None
+    shipping_cost: Optional[float] = None
+    free_shipping_threshold: Optional[float] = None
+    google_maps_url: Optional[str] = None
+    booking_email: Optional[EmailStr] = None
+    facebook_url: Optional[str] = None
+    instagram_url: Optional[str] = None
+    privacy_text: Optional[str] = None
+    terms_text: Optional[str] = None
+    seo_title: Optional[str] = None
+    seo_description: Optional[str] = None
+    seo_keywords: Optional[str] = None
+    seo_image_url: Optional[str] = None
 
 class SiteSettings(SettingsUpdate):
     id: Optional[str] = None

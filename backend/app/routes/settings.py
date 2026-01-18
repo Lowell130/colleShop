@@ -29,7 +29,7 @@ async def update_settings(settings_in: SettingsUpdate, current_user: User = Depe
     existing = await mongodb.db.settings.find_one({})
     
     if existing:
-        await mongodb.db.settings.update_one({"_id": existing["_id"]}, {"$set": settings_in.dict()})
+        await mongodb.db.settings.update_one({"_id": existing["_id"]}, {"$set": settings_in.dict(exclude_unset=True)})
         updated = await mongodb.db.settings.find_one({"_id": existing["_id"]})
         return SiteSettings(**updated, id=str(updated["_id"]))
     else:

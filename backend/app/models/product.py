@@ -16,6 +16,7 @@ class ProductBase(BaseModel):
     temp: Optional[str] = None
     pairing: Optional[str] = None
     image: Optional[str] = None
+    stock: int = 0
 
 class ProductCreate(ProductBase):
     pass
@@ -31,6 +32,7 @@ class ProductUpdate(BaseModel):
     temp: Optional[str] = None
     pairing: Optional[str] = None
     image: Optional[str] = None
+    stock: Optional[int] = None
 
 class Product(ProductBase):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
