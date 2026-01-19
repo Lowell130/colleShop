@@ -10,6 +10,7 @@ class SettingsUpdate(BaseModel):
     hours_sunday: Optional[str] = None
     shipping_cost: Optional[float] = None
     free_shipping_threshold: Optional[float] = None
+    vat_rate: Optional[float] = 22.0
     google_maps_url: Optional[str] = None
     booking_email: Optional[EmailStr] = None
     facebook_url: Optional[str] = None

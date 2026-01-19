@@ -19,6 +19,7 @@ async def create_checkout_session(order_in: OrderCreate, background_tasks: Backg
     site_settings = await mongodb.db.settings.find_one({})
     shipping_cost = site_settings.get("shipping_cost", 10.0) if site_settings else 10.0
     free_threshold = site_settings.get("free_shipping_threshold", 100.0) if site_settings else 100.0
+    vat_rate = site_settings.get("vat_rate", 22.0) if site_settings else 22.0
     
     # Calculate items total
     items_total = 0.0
@@ -32,10 +33,14 @@ async def create_checkout_session(order_in: OrderCreate, background_tasks: Backg
         if current_stock < item.quantity:
              raise HTTPException(status_code=400, detail=f"Quantità non disponibile per {item.name}. Disponibili: {current_stock}")
         
-        items_total += item.price * item.quantity
+        # Calculate Gross Price (Net * (1 + VAT/100))
+        net_price = product.get("price", 0.0)
+        gross_price = net_price * (1 + vat_rate / 100)
+        items_total += gross_price * item.quantity
 
     # Determine shipping
     final_shipping = 0.0
+    # For free shipping threshold, usually we check the Subtotal (items_total)
     if items_total < free_threshold:
         final_shipping = shipping_cost
     

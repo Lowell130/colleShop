@@ -15,6 +15,32 @@ const ordersStore = useOrdersStore();
 const authStore = useAuthStore();
 const { isAdmin } = storeToRefs(authStore);
 
+import { useSettingsStore } from '~/stores/settings';
+const settingsStore = useSettingsStore();
+
+const itemsTotal = computed(() => {
+    if (!order.value) return 0;
+    return order.value.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+});
+
+const shippingCost = computed(() => {
+    if (!order.value) return 0;
+    // Difference between Total Amount and Sum of Items
+    const cost = order.value.total_amount - itemsTotal.value;
+    return Math.max(0, cost); // Prevent negative due to float precision
+});
+
+const vatRate = computed(() => settingsStore.settings?.vat_rate ?? 22);
+
+const vatAmount = computed(() => {
+    if (!itemsTotal.value) return 0;
+    // Items Price is Gross (Net + VAT).
+    // Gross = Net * (1 + rate/100)
+    // Net = Gross / (1 + rate/100)
+    // VAT = Gross - Net
+    return itemsTotal.value - (itemsTotal.value / (1 + vatRate.value / 100));
+});
+
 const order = ref(null);
 const loading = ref(true);
 const error = ref(null);
@@ -170,8 +196,17 @@ const translateStatus = (status) => {
                 </tbody>
                 <tfoot class="bg-stone-50 border-t border-stone-100">
                     <tr>
-                        <td colspan="3" class="p-4 text-right font-bold uppercase tracking-widest text-stone-600">Totale Ordine</td>
-                        <td class="p-4 text-right text-xl font-serif text-wine-900 font-bold">{{ formatPrice(order.total_amount) }}</td>
+                        <td colspan="3" class="p-4 text-right uppercase tracking-widest text-xs text-stone-500">Spedizione</td>
+                        <td class="p-4 text-right font-medium text-stone-600">{{ formatPrice(shippingCost) }}</td>
+                    </tr>
+                    <tr>
+                         <td colspan="3" class="p-4 text-right font-bold uppercase tracking-widest text-stone-600">Totale Ordine</td>
+                         <td class="p-4 text-right text-xl font-serif text-wine-900 font-bold">{{ formatPrice(order.total_amount) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="p-2 text-right text-xs text-stone-400 italic">
+                            (Di cui IVA {{ vatRate }}%: {{ formatPrice(vatAmount) }})
+                        </td>
                     </tr>
                 </tfoot>
             </table>

@@ -72,13 +72,18 @@ const formatPrice = (price) => {
             <div class="text-xs text-gold-600 font-bold uppercase tracking-widest mb-1">{{ product.grape }} — {{ product.year }}</div>
             <h3 class="text-2xl font-serif text-stone-900 mb-2 group-hover:text-wine-900 transition-colors cursor-pointer" @click="$router.push(`/shop/${product._id}`)">{{ product.name }}</h3>
             <p class="text-stone-500 font-light text-sm mb-4 line-clamp-2">{{ product.description }}</p>
-            <div class="text-xl font-serif text-stone-900 mb-6 font-medium italic">{{ formatPrice(product.price) }}</div>
+            <div class="text-xl font-serif text-stone-900 mb-6 font-medium italic">{{ formatPrice(product.price * (1 + cartStore.vatRate / 100)) }}</div>
           </div>
 
           <!-- Actions -->
           <div class="mt-auto space-y-3">
-             <button @click="cartStore.addToCart(product)" class="w-full bg-stone-900 text-white py-3 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group/btn">
-                <span>Aggiungi al Carrello</span>
+             <button 
+                @click="cartStore.addToCart(product)" 
+                :disabled="product.stock <= 0"
+                class="w-full bg-stone-900 text-white py-3 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group/btn disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-stone-900 disabled:hover:shadow-md disabled:hover:translate-y-0"
+             >
+                <span v-if="product.stock > 0">Aggiungi al Carrello</span>
+                <span v-else>Esaurito</span>
              </button>
              <button @click="$router.push(`/shop/${product._id}`)" class="w-full bg-transparent text-stone-500 py-2 rounded-sm font-bold uppercase tracking-widest text-[10px] hover:text-wine-900 transition-colors">
                 Visualizza Dettagli

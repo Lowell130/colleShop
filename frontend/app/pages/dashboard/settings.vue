@@ -26,7 +26,8 @@ const form = reactive({
     facebook_url: '',
     instagram_url: '',
     privacy_text: '',
-    terms_text: ''
+    terms_text: '',
+    vat_rate: 22
 });
 
 onMounted(async () => {
@@ -73,6 +74,18 @@ const save = async () => {
                 <div>
                      <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Telefono</label>
                      <input v-model="form.phone" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tax Config -->
+        <div>
+            <h2 class="text-lg font-bold text-stone-800 mb-4 border-b pb-2">Configurazione Fiscale</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                     <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Aliquota IVA (%)</label>
+                     <input v-model.number="form.vat_rate" type="number" step="0.1" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                     <p class="text-xs text-stone-400 mt-1">Questa percentuale verrà aggiunta ai prezzi base dei prodotti.</p>
                 </div>
             </div>
         </div>

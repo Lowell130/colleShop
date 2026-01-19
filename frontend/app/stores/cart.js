@@ -1,26 +1,39 @@
 
 import { defineStore } from 'pinia';
+import { useSettingsStore } from './settings';
 
 export const useCartStore = defineStore('cart', {
     state: () => ({
         items: [],
         isCartOpen: false,
-        shippingCost: 0,
-        freeShippingThreshold: 100,
     }),
     getters: {
+        // Proxy getters to SettingsStore
+        shippingCost() {
+            const settingsStore = useSettingsStore();
+            return settingsStore.settings?.shipping_cost ?? 10;
+        },
+        freeShippingThreshold() {
+            const settingsStore = useSettingsStore();
+            return settingsStore.settings?.free_shipping_threshold ?? 100;
+        },
+        vatRate() {
+            const settingsStore = useSettingsStore();
+            return settingsStore.settings?.vat_rate ?? 22;
+        },
+
         totalItems: (state) => state.items.reduce((total, item) => total + item.quantity, 0),
         itemsSubtotal: (state) => state.items.reduce((total, item) => total + (item.price * item.quantity), 0),
-        shipping: (state) => {
-            if (state.items.length === 0) return 0;
-            const subtotal = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-            return subtotal >= state.freeShippingThreshold ? 0 : state.shippingCost;
+
+        // Updated getters to use 'this' for accessing above getters
+        shipping() {
+            if (this.items.length === 0) return 0;
+            const subtotal = this.itemsSubtotal; // Reuse existing getter
+            return subtotal >= this.freeShippingThreshold ? 0 : this.shippingCost;
         },
-        totalPrice: (state) => {
-            const subtotal = state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-            if (state.items.length === 0) return 0;
-            const shipping = subtotal >= state.freeShippingThreshold ? 0 : state.shippingCost;
-            return subtotal + shipping;
+        totalPrice() {
+            if (this.items.length === 0) return 0;
+            return this.itemsSubtotal + this.shipping;
         },
     },
     actions: {
@@ -34,22 +47,7 @@ export const useCartStore = defineStore('cart', {
                         console.error('Failed to parse cart from localStorage', e);
                     }
                 }
-
-                // Fetch shipping settings
-                this.fetchShippingSettings();
-            }
-        },
-        async fetchShippingSettings() {
-            try {
-                const config = useRuntimeConfig();
-                const response = await fetch(`${config.public.apiBase}/settings/`);
-                if (response.ok) {
-                    const settings = await response.json();
-                    if (settings.shipping_cost !== undefined) this.shippingCost = settings.shipping_cost;
-                    if (settings.free_shipping_threshold !== undefined) this.freeShippingThreshold = settings.free_shipping_threshold;
-                }
-            } catch (e) {
-                console.error("Failed to fetch shipping settings", e);
+                // No need to fetch settings here, as App component handles it via SettingsStore
             }
         },
         addToCart(product, quantity = 1) {
@@ -65,6 +63,10 @@ export const useCartStore = defineStore('cart', {
                     price = parseFloat(price.replace('€', ''));
                 }
 
+                // Calculate Gross Price (Net + VAT) for Cart
+                // Use 'this.vatRate' which now pulls from SettingsStore
+                price = price * (1 + (this.vatRate / 100));
+
                 this.items.push({
                     id: productId,
                     name: product.name,
@@ -74,9 +76,8 @@ export const useCartStore = defineStore('cart', {
                     quantity: quantity
                 });
             }
-            // Open cart to confirm addition
-            this.isCartOpen = true;
             this.saveCart();
+            this.isCartOpen = true;
         },
         saveCart() {
             if (process.client) {
@@ -129,8 +130,8 @@ export const useCartStore = defineStore('cart', {
                     total_amount: this.totalPrice,
                     shipping_address: addressData.shipping_address,
                     billing_address: addressData.billing_address,
-                    customer_name: addressData.customer_name, // Optional, can let backend handle from user
-                    customer_email: addressData.customer_email, // Optional
+                    customer_name: addressData.customer_name,
+                    customer_email: addressData.customer_email,
                     customer_tax_code: addressData.tax_code
                 };
 

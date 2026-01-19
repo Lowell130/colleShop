@@ -41,10 +41,15 @@ onMounted(() => {
           
           <h3 class="text-2xl font-serif text-stone-900 mb-1 group-hover:text-wine-900 transition-colors">{{ wine.name }}</h3>
           <p class="text-xs text-gold-600 font-bold uppercase tracking-widest mb-4">{{ wine.type }}</p>
-          <div class="text-xl font-serif text-stone-500 mb-8 italic">€ {{ wine.price ? wine.price.toFixed(2) : '0.00' }}</div>
+          <div class="text-xl font-serif text-stone-500 mb-8 italic">€ {{ wine.price ? (wine.price * (1 + cartStore.vatRate / 100)).toFixed(2) : '0.00' }}</div>
           
-          <button @click="cartStore.addToCart(wine)" class="w-full bg-stone-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group">
-            <span>Aggiungi al Carrello</span>
+          <button 
+            @click="cartStore.addToCart(wine)" 
+            :disabled="wine.stock <= 0"
+            class="w-full bg-stone-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-xs hover:bg-wine-900 transition-all duration-300 ease-out flex items-center justify-center gap-2 shadow-md hover:shadow-xl hover:shadow-wine-900/20 hover:-translate-y-1 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-stone-900 disabled:hover:shadow-md disabled:hover:translate-y-0"
+          >
+            <span v-if="wine.stock > 0">Aggiungi al Carrello</span>
+            <span v-else>Esaurito</span>
           </button>
         </div>
       </div>

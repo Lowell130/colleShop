@@ -3,7 +3,7 @@ from typing import Any, Dict
 from app.db.mongodb import mongodb
 from app.core.security import get_current_user
 from app.models.user import User
-from datetime import datetime
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
@@ -31,14 +31,58 @@ async def get_dashboard_data(current_user: User = Depends(get_current_user)) -> 
         for order in recent_orders:
             order["_id"] = str(order["_id"])
             if "user_id" in order: order["user_id"] = str(order["user_id"])
-            
+
+        # Low Stock (<= 5)
+        low_stock_products = await mongodb.db.products.find({"stock": {"$lte": 5}}).limit(5).to_list(5)
+        for p in low_stock_products:
+            p["_id"] = str(p["_id"])
+
+        # Sales Chart (Last 7 Days)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        
+        pipeline_chart = [
+            {"$match": {
+                "status": {"$in": ["paid", "shipped"]},
+                "created_at": {"$gte": seven_days_ago}
+            }},
+            {"$group": {
+                "_id": {
+                    "year": {"$year": "$created_at"},
+                    "month": {"$month": "$created_at"},
+                    "day": {"$dayOfMonth": "$created_at"}
+                },
+                "total": {"$sum": "$total_amount"}
+            }},
+            {"$sort": {"_id.year": 1, "_id.month": 1, "_id.day": 1}}
+        ]
+        
+        chart_data = await mongodb.db.orders.aggregate(pipeline_chart).to_list(7)
+        
+        # Create a map for quick access
+        data_map = {
+            f"{entry['_id']['day']:02d}/{entry['_id']['month']:02d}": entry["total"] 
+            for entry in chart_data
+        }
+
+        # Fill last 7 days
+        sales_chart = []
+        for i in range(6, -1, -1):
+            date_obj = datetime.utcnow() - timedelta(days=i)
+            date_key = f"{date_obj.day:02d}/{date_obj.month:02d}"
+            sales_chart.append({
+                "date": date_key,
+                "total": data_map.get(date_key, 0.0)
+            })
+
         return {
             "role": "admin",
             "total_users": total_users,
             "total_products": total_products,
             "total_orders": total_orders,
             "total_revenue": total_revenue,
-            "recent_orders": recent_orders
+            "recent_orders": recent_orders,
+            "low_stock_products": low_stock_products,
+            "sales_chart": sales_chart
         }
         
     else:

@@ -60,7 +60,7 @@ const formatPrice = (price) => {
            </div>
            
            <h1 class="text-5xl md:text-6xl font-serif text-stone-900 mb-6 leading-tight">{{ product.name }}</h1>
-           <p class="text-2xl text-wine-900 font-serif italic mb-8">{{ formatPrice(product.price) }}</p>
+           <p class="text-2xl text-wine-900 font-serif italic mb-8">{{ formatPrice(product.price * (1 + cartStore.vatRate / 100)) }}</p>
            
            <div class="prose prose-stone text-stone-600 font-light text-lg mb-10 leading-relaxed">
               <p>{{ product.description }}</p>
@@ -102,7 +102,7 @@ const formatPrice = (price) => {
               >
                 <span v-if="product.stock > 0" class="relative z-10 flex items-center justify-center gap-3">
                    Aggiungi al Carrello 
-                   <span class="opacity-70 font-normal">| {{ formatPrice(product.price * quantity) }}</span>
+                   <span class="opacity-70 font-normal">| {{ formatPrice(product.price * (1 + cartStore.vatRate / 100) * quantity) }}</span>
                 </span>
                 <span v-else class="relative z-10 flex items-center justify-center">
                     Esaurito

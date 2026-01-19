@@ -106,9 +106,11 @@ const goToCheckout = () => {
         <!-- Footer -->
         <div v-if="items.length > 0" class="p-6 border-t border-stone-100 bg-stone-50">
            <div class="flex justify-between items-center mb-6">
-              <span class="text-stone-600 font-medium">Totale</span>
-              <span class="text-2xl font-serif text-wine-900">{{ formatPrice(totalPrice) }}</span>
+              <span class="text-stone-600 font-medium">Subtotale</span>
+              <span class="text-2xl font-serif text-wine-900">{{ formatPrice(cartStore.itemsSubtotal) }}</span>
            </div>
+           
+           <p class="text-xs text-stone-500 mb-4 text-right">Spedizione e imposte calcolate al checkout</p>
            
            <button @click="goToCheckout" class="w-full bg-wine-900 text-white py-4 rounded-sm font-bold uppercase tracking-widest text-sm hover:bg-wine-800 transition-all duration-300 ease-out shadow-xl hover:shadow-wine-900/40 hover:-translate-y-1 relative overflow-hidden group">
                 <span class="relative z-10">Procedi al Checkout</span>

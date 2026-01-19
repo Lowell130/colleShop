@@ -72,8 +72,55 @@ const formatDate = (dateString) => {
                     <div class="text-3xl font-serif text-stone-900 font-bold mt-auto">{{ data.total_users }}</div>
                 </div>
             </div>
-            
-            <!-- Recent Orders Table -->
+
+            <!-- Dashboard Widgets (Chart + Alerts) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Revenue Chart (Last 7 Days) -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-sm shadow-sm border border-stone-100">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500 mb-6">Andamento Vendite (7 Giorni)</h3>
+                    <div v-if="data.sales_chart && data.sales_chart.length > 0" class="flex justify-between h-48 gap-2">
+                        <div v-for="(day, index) in data.sales_chart" :key="index" class="flex flex-col items-center gap-2 group flex-1 h-full">
+                            <!-- Bar Track -->
+                            <div class="w-full bg-wine-50 rounded-t-sm relative flex-1 overflow-hidden group-hover:bg-wine-100 transition-colors">
+                                <!-- Bar Value -->
+                                <div class="absolute bottom-0 w-full bg-wine-900 transition-all duration-1000 ease-out" 
+                                     :style="{ height: (day.total / Math.max(...data.sales_chart.map(d => d.total), 1) * 100) + '%' }">
+                                </div>
+                                <!-- Tooltip -->
+                                <div class="absolute top-2 left-1/2 -translate-x-1/2 bg-stone-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                    {{ formatPrice(day.total) }}
+                                </div>
+                            </div>
+                            <span class="text-[10px] text-stone-500 font-mono">{{ day.date }}</span>
+                        </div>
+                    </div>
+                    <div v-else class="h-48 flex items-center justify-center text-stone-400 text-sm italic">
+                        Nessun dato di vendita recente.
+                    </div>
+                </div>
+
+                <!-- Low Stock Alert -->
+                 <div class="bg-white p-6 rounded-sm shadow-sm border border-stone-100">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        Scorte in Esaurimento
+                    </h3>
+                    <div v-if="data.low_stock_products && data.low_stock_products.length > 0" class="space-y-3">
+                        <div v-for="product in data.low_stock_products" :key="product._id" class="flex items-center justify-between p-3 bg-red-50 rounded-sm border border-red-100">
+                            <span class="text-sm font-medium text-stone-800 truncate pr-2">{{ product.name }}</span>
+                            <span class="text-xs font-bold px-2 py-1 bg-white text-red-600 rounded shadow-sm">
+                                {{ product.stock }} pz
+                            </span>
+                        </div>
+                        <NuxtLink to="/dashboard/products" class="block text-center text-xs text-wine-900 font-bold hover:underline mt-4">Gestisci Magazzino &rarr;</NuxtLink>
+                    </div>
+                    <div v-else class="text-center py-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-green-100 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <p class="text-xs text-stone-400">Tutti i prodotti hanno scorte sufficienti.</p>
+                    </div>
+                </div>
+            </div>
              <div class="bg-white rounded-sm shadow-sm border border-stone-100 overflow-hidden">
                 <div class="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                     <h2 class="font-bold text-stone-800 uppercase text-xs tracking-widest">Ordini Recenti</h2>

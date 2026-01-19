@@ -32,6 +32,9 @@ class OrderCreate(BaseModel):
     total_amount: float # Optionally calculated on backend for security
     shipping_address: Address
     billing_address: Address
+    customer_tax_code: Optional[str] = None
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
 
 class Order(OrderBase):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)

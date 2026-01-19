@@ -3,7 +3,8 @@ import { useCartStore } from '~/stores/cart';
 import { useAuthStore } from '~/stores/auth';
 import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
+import { validateEmail, validatePhone, validateTaxCode, validateZipCode } from '~/utils/validators';
 
 definePageMeta({
     middleware: 'auth'
@@ -14,6 +15,13 @@ const authStore = useAuthStore();
 const router = useRouter();
 const { items, totalPrice } = storeToRefs(cartStore);
 const { user } = storeToRefs(authStore);
+
+const vatAmount = computed(() => {
+    const rate = cartStore.vatRate || 22;
+    const gross = cartStore.itemsSubtotal || 0;
+    const net = gross / (1 + rate / 100);
+    return gross - net;
+});
 
 const processing = ref(false);
 const error = ref(null);
@@ -38,6 +46,42 @@ const form = reactive({
         phone: ''
     }
 });
+
+const errors = reactive({});
+
+const validateForm = () => {
+    // Reset errors
+    Object.keys(errors).forEach(key => delete errors[key]);
+    let isValid = true;
+
+    // Shipping Address Validation
+    if (!form.shipping_address.street) { errors['shipping_street'] = 'Indirizzo richiesto'; isValid = false; }
+    if (!form.shipping_address.city) { errors['shipping_city'] = 'Città richiesta'; isValid = false; }
+    
+    if (!validateZipCode(form.shipping_address.zip_code)) { 
+        errors['shipping_zip_code'] = 'CAP non valido (5 cifre)'; isValid = false; 
+    }
+    
+    if (!validatePhone(form.shipping_address.phone)) {
+        errors['shipping_phone'] = 'Telefono non valido'; isValid = false;
+    }
+
+    // Tax Code
+    if (!validateTaxCode(form.tax_code)) {
+        errors['tax_code'] = 'Codice Fiscale non valido (16 caratteri)'; isValid = false;
+    }
+
+    // Billing Address (if different)
+    if (!useSameAddress.value) {
+         if (!form.billing_address.street) { errors['billing_street'] = 'Indirizzo richiesto'; isValid = false; }
+         if (!form.billing_address.city) { errors['billing_city'] = 'Città richiesta'; isValid = false; }
+         if (!validateZipCode(form.billing_address.zip_code)) { 
+            errors['billing_zip_code'] = 'CAP non valido'; isValid = false; 
+        }
+    }
+
+    return isValid;
+};
 
 onMounted(() => {
     // Restore from session storage if exists (came back from login)
@@ -67,31 +111,33 @@ onMounted(() => {
 const handlePayment = async () => {
     processing.value = true;
     error.value = null;
+    
+    if (!validateForm()) {
+        processing.value = false;
+        error.value = "Per favore correggi gli errori evidenziati nel modulo.";
+        // Scroll to top or first error could be good (simple alert for now)
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+
     try {
         const payload = { ...form };
         if (useSameAddress.value) {
             payload.billing_address = { ...form.shipping_address };
         }
-        // Basic validation
-        if (!payload.shipping_address.street || !payload.shipping_address.city || !payload.shipping_address.zip_code) {
-             throw new Error("L'indirizzo di spedizione è incompleto.");
-        }
-        if (!payload.tax_code) {
-             throw new Error("Inserisci il Codice Fiscale.");
-        }
-
+        
         await cartStore.checkout(payload);
         // Redirect to user orders
         router.push('/dashboard/orders');
     } catch (err) {
-        if (err.message.includes("Devi effettuare il login")) {
+        if (err.message && err.message.includes("Devi effettuare il login")) {
             // Save form state
             sessionStorage.setItem('checkout_form', JSON.stringify(form));
             sessionStorage.setItem('checkout_same_address', useSameAddress.value);
             // Redirect to login with return back
             router.push(`/login?redirect=${encodeURIComponent('/checkout')}`);
         } else {
-            error.value = err.message;
+            error.value = err.message || "Errore sconosciuto";
         }
     } finally {
         processing.value = false;
@@ -121,12 +167,14 @@ const formatPrice = (price) => {
                     <div class="space-y-4">
                         <div>
                             <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Via e Numero</label>
-                            <input v-model="form.shipping_address.street" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                            <input v-model="form.shipping_address.street" type="text" :class="errors['shipping_street'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none">
+                            <p v-if="errors['shipping_street']" class="text-xs text-red-500 mt-1">{{ errors['shipping_street'] }}</p>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Città</label>
-                                <input v-model="form.shipping_address.city" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                                <input v-model="form.shipping_address.city" type="text" :class="errors['shipping_city'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none">
+                                <p v-if="errors['shipping_city']" class="text-xs text-red-500 mt-1">{{ errors['shipping_city'] }}</p>
                             </div>
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Provincia</label>
@@ -136,7 +184,8 @@ const formatPrice = (price) => {
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">CAP</label>
-                                <input v-model="form.shipping_address.zip_code" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                                <input v-model="form.shipping_address.zip_code" type="text" :class="errors['shipping_zip_code'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none">
+                                <p v-if="errors['shipping_zip_code']" class="text-xs text-red-500 mt-1">{{ errors['shipping_zip_code'] }}</p>
                             </div>
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Paese</label>
@@ -145,12 +194,14 @@ const formatPrice = (price) => {
                         </div>
                         <div>
                              <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Telefono</label>
-                             <input v-model="form.shipping_address.phone" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                             <input v-model="form.shipping_address.phone" type="text" :class="errors['shipping_phone'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none">
+                             <p v-if="errors['shipping_phone']" class="text-xs text-red-500 mt-1">{{ errors['shipping_phone'] }}</p>
                         </div>
                          <!-- Tax Code -->
                         <div>
                              <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Codice Fiscale *</label>
-                             <input v-model="form.tax_code" type="text" placeholder="CF per fatturazione" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none uppercase" required>
+                             <input v-model="form.tax_code" type="text" placeholder="CF per fatturazione" :class="errors['tax_code'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none uppercase" required>
+                             <p v-if="errors['tax_code']" class="text-xs text-red-500 mt-1">{{ errors['tax_code'] }}</p>
                         </div>
                     </div>
                 </div>
@@ -172,12 +223,14 @@ const formatPrice = (price) => {
                     <div v-if="!useSameAddress" class="space-y-4 animate-fade-in-down">
                         <div>
                             <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Via e Numero</label>
-                            <input v-model="form.billing_address.street" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                            <input v-model="form.billing_address.street" type="text" :class="errors['billing_street'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none">
+                            <p v-if="errors['billing_street']" class="text-xs text-red-500 mt-1">{{ errors['billing_street'] }}</p>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Città</label>
-                                <input v-model="form.billing_address.city" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                                <input v-model="form.billing_address.city" type="text" :class="errors['billing_city'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none">
+                                <p v-if="errors['billing_city']" class="text-xs text-red-500 mt-1">{{ errors['billing_city'] }}</p>
                             </div>
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Provincia</label>
@@ -187,7 +240,8 @@ const formatPrice = (price) => {
                         <div class="grid grid-cols-2 gap-4">
                              <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">CAP</label>
-                                <input v-model="form.billing_address.zip_code" type="text" class="w-full border border-stone-300 p-3 rounded-sm focus:border-wine-900 outline-none">
+                                <input v-model="form.billing_address.zip_code" type="text" :class="errors['billing_zip_code'] ? 'border-red-500' : 'border-stone-300 focus:border-wine-900'" class="w-full border p-3 rounded-sm outline-none">
+                                <p v-if="errors['billing_zip_code']" class="text-xs text-red-500 mt-1">{{ errors['billing_zip_code'] }}</p>
                             </div>
                             <div>
                                 <label class="block text-stone-500 text-xs font-bold uppercase tracking-widest mb-2">Paese</label>
@@ -223,6 +277,12 @@ const formatPrice = (price) => {
                             <span class="text-stone-600">Spedizione</span>
                             <span v-if="cartStore.shipping === 0" class="font-bold text-green-600 uppercase text-xs tracking-widest">Gratis</span>
                             <span v-else class="font-medium text-stone-900">{{ formatPrice(cartStore.shipping) }}</span>
+                        </div>
+                        
+                        <!-- VAT -->
+                         <div class="flex justify-between items-center text-sm pt-2 text-stone-500">
+                            <span>Di cui IVA ({{ cartStore.vatRate }}%)</span>
+                            <span>{{ formatPrice(vatAmount) }}</span>
                         </div>
                     </div>
                     <div class="border-t border-stone-100 pt-6 flex justify-between items-center text-lg font-serif font-bold text-wine-900">
