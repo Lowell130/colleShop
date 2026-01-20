@@ -1,13 +1,22 @@
+<script setup>
 import { useSettingsStore } from '~/stores/settings';
-import { computed, watchEffect } from 'vue';
+import { useAuthStore } from '~/stores/auth';
+import { useCartStore } from '~/stores/cart';
+import { computed, watchEffect, onMounted } from 'vue';
 
 const authStore = useAuthStore();
 const cartStore = useCartStore();
 const settingsStore = useSettingsStore();
 
+// Initialize stores
+// Auth and Settings can start early
 authStore.initializeAuth();
-cartStore.initializeCart();
 settingsStore.fetchSettings();
+
+// Cart relies on LocalStorage, best to init on mount to ensure client env
+onMounted(() => {
+    cartStore.initializeCart();
+});
 
 useHead({
   title: computed(() => settingsStore.settings?.seo_title || 'Il Colle Tinto'),
@@ -29,6 +38,7 @@ useHead({
      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
   ]
 });
+</script>
 
 <template>
   <NuxtLayout>
